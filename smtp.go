@@ -8,6 +8,8 @@ import (
 	"net/smtp"
 	"strings"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
 // A Dialer is a dialer to an SMTP server.
@@ -188,6 +190,16 @@ var (
 		return smtp.NewClient(conn, host)
 	}
 )
+
+func SetDialTimeoutWithProxy(proxyStr string) {
+	netDialTimeout = func(network, address string, d time.Duration) (net.Conn, error) {
+		dial, err := proxy.SOCKS5("tcp", proxyStr, nil, proxy.Direct)
+		if err != nil {
+			return nil, err
+		}
+		return dial.Dial("tcp", address)
+	}
+}
 
 type smtpClient interface {
 	Hello(string) error
